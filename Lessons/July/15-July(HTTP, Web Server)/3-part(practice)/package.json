@@ -1,0 +1,21 @@
+{
+  "name": "3-part(practice)",
+  "version": "1.0.0",
+  "description": "Задача 1 — «Цитатник»  Сервер хранит массив строк-цитат.",
+  "main": "tasks.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "moment": "^2.30.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
