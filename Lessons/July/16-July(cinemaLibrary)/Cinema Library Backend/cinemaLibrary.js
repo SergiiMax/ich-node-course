@@ -1,9 +1,11 @@
 import express from "express";
+import cors from 'cors'
 import "dotenv/config";
 
 const PORT = process.env.PORT || 3000;
 const APP_NAME = process.env.APP_NAME || "My App";
 const app = express();
+app.use(cors())
 app.use(express.json());
 
 const movies = [
@@ -120,8 +122,12 @@ app.post("/api/movies/:id/reviews", (req, res) => {
     return res.status(404).json({ error: "Movie not found" });
   }
 
-  if (!author || !text || author === '' || text.length < 10) {
-    return res.status(400).json({ error: "Invalid data" });
+  if (!author || author === '' || typeof author !== 'string') {
+    return res.status(400).json({ error: "Invalid author" });
+  }
+
+   if (!text || text.length < 10 || typeof text !== 'string') {
+    return res.status(400).json({ error: "Invalid text" });
   }
 
   const newReview = {
