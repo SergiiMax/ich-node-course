@@ -19,9 +19,8 @@ npm init -y
 ## 2. Установка библиотек
 
 ```bash
-npm install express sequelize mysql2 dotenv sequelize-cli bcryptjs
-npm i nodemon -D
-```Добавить в package.json в scrypt строку "dev": "nodemon server.js"
+npm install express sequelize mysql2 dotenv
+npm install sequelize-cli
 ```
 
 - **express** — веб-фреймворк, роуты и сервер
@@ -29,7 +28,6 @@ npm i nodemon -D
 - **mysql2** — драйвер для подключения к MySQL
 - **dotenv** — подгрузка переменных окружения из `.env`
 - **sequelize-cli** — CLI для генерации и запуска миграций/моделей/сидов
-- **bcryptjs** - для хеширования паролей
 
 ## 3. Файл `.env`
 
@@ -68,7 +66,7 @@ export default sequelize;
 
 ## 5. Инициализация sequelize-cli (`sequelize-cli init`)
 
-Запускаем из корня проекта(**в папке db**):
+Запускаем из корня проекта:
 
 ```bash
 npx sequelize-cli init
@@ -90,7 +88,7 @@ seeders/
 ```bash
 npx sequelize-cli migration:generate --name create-users
 ```
-Не забудьте переименовать файл в .cjs.
+
 Cli создаст файл в `db/migrations/` с расширением `.js` — переименовать его в `.cjs` (чтобы Node не пытался читать его как ES-модуль) и описать структуру таблицы в `up`/`down`:
 
 ```js
@@ -120,7 +118,6 @@ module.exports = {
 ```
 
 ## 8. Запуск миграции
-Предварительно нужно создать базу данных в MySQL Workbanch если её нет!!! и не забыть сменить пароль в config.json
 
 ```bash
 npx sequelize-cli db:migrate
@@ -130,7 +127,7 @@ npx sequelize-cli db:migrate
 
 ```bash
 npx sequelize-cli db:migrate:status     # статус миграций
-npx sequelize-cli db:migrate:undo   # откатить последнюю
+npx sequelize-cli db:migrate:undo       # откатить последнюю
 npx sequelize-cli db:migrate:undo:all   # откатить все
 ```
 
@@ -183,7 +180,7 @@ router.post('/', async (req, res) => {
 export default router;
 ```
 
-## 11. Подключение в `index.js` --- server **server.js**
+## 11. Подключение в `index.js`
 
 ```js
 import express from 'express';
@@ -210,7 +207,7 @@ app.listen(PORT, async () => {
 ## 12. Запуск проекта
 
 ```bash
-npm start ---npm run dev
+npm start
 ```
 
 Проверка эндпоинтов:
@@ -222,7 +219,3 @@ curl -X POST http://localhost:3000/users \
 
 curl http://localhost:3000/users
 ```
-
-
-Ставим bcryptjs для шифрования пароля в бд
-npm i bcryptjs

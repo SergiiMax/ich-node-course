@@ -1,0 +1,26 @@
+{
+  "name": "2-part(practice)",
+  "version": "1.0.0",
+  "description": "Создать сервер, функционал регистрация, логин, получение токена по логину, обязательно валидировать формате\r   if (!name || !email || !password) {\r     return res.status(400).json({ message: 'Name, email and password are required' });\r   }\r   if (password.length < 6) {\r     return res.status(400).json({ message: 'Password must be at least 6 characters' });\r   }",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.23.1",
+    "sequelize": "^6.37.8",
+    "sequelize-cli": "^6.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
