@@ -19,8 +19,8 @@ npm init -y
 ## 2. Установка библиотек
 
 ```bash
-npm install express sequelize mysql2 dotenv
-npm install sequelize-cli
+npm install express sequelize mysql2 dotenv sequelize-cli bcrypt jsonwebtoken
+npm i nodemon -D
 ```
 
 - **express** — веб-фреймворк, роуты и сервер

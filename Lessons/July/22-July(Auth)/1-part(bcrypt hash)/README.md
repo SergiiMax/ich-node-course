@@ -123,7 +123,7 @@ module.exports = {
 Предварительно нужно создать базу данных в MySQL Workbanch если её нет!!! и не забыть сменить пароль в config.json
 
 ```bash
-npx sequelize-cli db:migrate
+cd db
 ```
 
 Полезные команды:
