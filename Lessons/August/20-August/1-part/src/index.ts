@@ -36,3 +36,51 @@ const Anna = new PartTimeEmployee(12, 95)
 const MArry = new FullTimeEmployee(2000)
 console.log(Anna.calculateSalary());
 console.log(MArry.calculateSalary())
+
+// Задача 2 — Транспорт
+// Создайте абстрактный класс Vehicle, который представляет транспортное средство.
+// В нём определите:
+// свойство brand — марка транспорта; 
+// абстрактный метод move(), который должен описывать движение транспорта. 
+// Создайте два класса:
+// Car — автомобиль; 
+// Bicycle — велосипед. 
+// Каждый класс должен по-своему реализовать move():
+// Car должен возвращать строку вроде "Car Toyota is driving"; 
+// Bicycle — "Bicycle Trek is riding". 
+// Также создайте массив из нескольких транспортных средств и вызовите move() для каждого из них.
+
+
+abstract class Vehicle {
+    constructor(public brand: string) {}
+
+    abstract move(): string
+}
+
+class Car extends Vehicle {
+    move(): string {
+        return `Car ${this.brand} is driving`
+    }
+}
+
+class Bicycle extends Vehicle {
+    move(): string {
+        return `Bicycle ${this.brand} is riding`
+    }
+}
+
+console.log(new Car("Toyota").move())
+console.log(new Bicycle("Trek").move())
+
+
+// Задача 3 — Платёжная система
+// Создайте абстрактный класс PaymentMethod.
+// В нём определите:
+// свойство amount — сумма платежа; 
+// абстрактный метод pay(), который выполняет оплату. 
+// Создайте два класса:
+// CreditCardPayment; 
+// PayPalPayment. 
+// Реализуйте pay() по-разному:
+// CreditCardPayment должен возвращать "Paid $100 using credit card"; 
+// PayPalPayment должен возвращать "Paid $100 using PayPal".
