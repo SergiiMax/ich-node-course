@@ -84,3 +84,26 @@ console.log(new Bicycle("Trek").move())
 // Реализуйте pay() по-разному:
 // CreditCardPayment должен возвращать "Paid $100 using credit card"; 
 // PayPalPayment должен возвращать "Paid $100 using PayPal".
+
+abstract class PaymentMethod {
+    constructor(protected amount: number) {}
+
+    abstract pay(): string
+}
+
+class CreditCardPayment extends PaymentMethod {
+    pay(): string {
+        return `Paid $${this.amount} using credit card`
+    }
+}
+
+class PayPalPayment extends PaymentMethod {
+    pay(): string {
+        return `Paid $${this.amount} using PayPal`
+    }
+}
+
+const creditCard = new CreditCardPayment(100)
+const payPal = new PayPalPayment(100)
+console.log(creditCard.pay());
+console.log(payPal.pay())
