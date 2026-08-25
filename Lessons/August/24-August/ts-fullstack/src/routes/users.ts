@@ -1,0 +1,70 @@
+  import { Router, type Request, type Response } from 'express';
+  import User from '../db/models/user';
+  import { auth } from '../middleware/auth';
+  import { signToken } from '../utils/jwt';
+
+  const router = Router();
+
+  interface CreateUserBody {
+    name: string;
+    email: string;
+    password: string;
+  }
+
+  interface LoginBody {
+    email?: string;
+    password?: string;
+  }
+
+  router.get('/', async (_req: Request, res: Response) => {
+    const users = await User.findAll();
+    res.json(users);
+  });
+
+  // Регистрация
+  router.post(
+    '/',
+    async (req: Request<unknown, unknown, CreateUserBody>, res: Response) => {
+      const { name, email, password } = req.body;
+
+      const user = await User.create({ name, email, password });
+      const { password: _, ...safe } = user.toJSON();
+      res.status(201).json({ user: safe, token: signToken({ id: user.id, email: user.email }) });
+    }
+  );
+
+  // Логин
+  router.post(
+    '/login',
+    async (req: Request<unknown, unknown, LoginBody>, res: Response) => {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ error: 'email и password обязательны' });
+      }
+
+      const user = await User.findOne({ where: { email } });
+      // одинаковый ответ на «нет юзера» и «неверный пароль» — чтобы не палить наличие email
+      if (!user || !user.comparePassword(password)) {
+        return res.status(401).json({ error: 'Неверный email или пароль' });
+      }
+
+      const { password: _, ...safe } = user.toJSON();
+      res.json({ user: safe, token: signToken({ id: user.id, email: user.email }) });
+    }
+  );
+
+  // Текущий пользователь по токену
+  router.get('/me', auth, async (req: Request, res: Response) => {
+    const user = await User.findByPk(req.user!.id, {
+      attributes: { exclude: ['password'] },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
+
+    res.json(user);
+  });
+
+  export default router;
