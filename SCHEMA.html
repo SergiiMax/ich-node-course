@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recipes API — схема БД</title>
+<style>
+  :root {
+    --bg: #fbfaf8;
+    --card: #ffffff;
+    --ink: #26251f;
+    --muted: #6d6b63;
+    --line: #e3e0d8;
+    --accent: #b8543a;
+    --pk: #8a5a00;
+    --pk-bg: #fdf2d8;
+    --fk: #2f5f8a;
+    --fk-bg: #e2eefa;
+    --uk: #4a6b2a;
+    --uk-bg: #e8f2dc;
+    --null: #7a6a8a;
+    --null-bg: #efe9f5;
+    --nn: #8a3a3a;
+    --nn-bg: #fae7e4;
+    --code: #f3f1ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #191917;
+      --card: #21211e;
+      --ink: #e6e3da;
+      --muted: #9c998e;
+      --line: #35342f;
+      --accent: #e08163;
+      --pk: #e8c06a; --pk-bg: #3a3018;
+      --fk: #8ab6dd; --fk-bg: #1c2b39;
+      --uk: #a6cc7d; --uk-bg: #24301a;
+      --null: #c0aad4; --null-bg: #2c2436;
+      --nn: #e79a90; --nn-bg: #3a2320;
+      --code: #2a2926;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 24px 80px;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  }
+  p {
+    color: black;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 30px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  h2 {
+    font-size: 20px; margin: 48px 0 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--line); letter-spacing: -0.01em;
+  }
+  .sub { color: var(--muted); margin: 0 0 28px; max-width: 70ch; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+  code { background: var(--code); padding: 1px 5px; border-radius: 4px; }
+
+  /* легенда */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 2px 7px; border-radius: 5px; white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .t-pk { color: var(--pk); background: var(--pk-bg); }
+  .t-fk { color: var(--fk); background: var(--fk-bg); }
+  .t-uk { color: var(--uk); background: var(--uk-bg); }
+  .t-null { color: var(--null); background: var(--null-bg); }
+  .t-nn { color: var(--nn); background: var(--nn-bg); }
+  .t-idx { color: var(--muted); background: var(--code); }
+
+  /* диаграмма */
+  #erd {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; overflow-x: auto; margin-bottom: 8px;
+  }
+  #erd svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  /* перекрываем тему mermaid, чтобы диаграмма читалась и в тёмном режиме */
+  #erd svg .node path,
+  #erd svg .node rect { fill: var(--card) !important; stroke: var(--line) !important; }
+  #erd svg .row-rect-odd path,
+  #erd svg .row-rect-odd rect { fill: var(--bg) !important; stroke: none !important; }
+  #erd svg .row-rect-even path,
+  #erd svg .row-rect-even rect { fill: var(--card) !important; stroke: none !important; }
+  #erd svg .divider path { stroke: var(--line) !important; stroke-opacity: 1 !important; }
+  #erd svg .relationshipLine { stroke: var(--muted) !important; }
+  #erd svg .nodeLabel, #erd svg .nodeLabel * { color: var(--ink) !important; }
+  #erd svg .label.name .nodeLabel,
+  #erd svg .label.name .nodeLabel * { color: var(--accent) !important; font-weight: 700 !important; }
+  #erd svg .label.attribute-comment .nodeLabel,
+  #erd svg .label.attribute-comment .nodeLabel * { color: var(--muted) !important; }
+  #erd svg .edgeLabel, #erd svg .edgeLabel * { color: var(--muted) !important; }
+  #erd svg .labelBkg { background: var(--card) !important; }
+  .fallback { color: var(--muted); font-size: 13px; }
+
+  /* карточки таблиц */
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(430px, 1fr)); }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;
+  }
+  .card > header {
+    padding: 12px 16px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .card h3 {
+    margin: 0; font-size: 15px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--accent); font-weight: 700;
+  }
+  .card .role { font-size: 12px; color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line);
+  }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.col { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; white-space: nowrap; }
+  td.type { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); white-space: nowrap; font-size: 12px; }
+  td.note { color: var(--muted); font-size: 12px; }
+  .keys { display: flex; gap: 4px; flex-wrap: wrap; }
+  .card footer {
+    padding: 10px 16px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); background: var(--code);
+  }
+  .card footer b { color: var(--ink); font-weight: 600; }
+
+  /* широкие таблицы */
+  .wide {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; overflow: hidden;
+  }
+  .wide table { font-size: 13px; }
+  .scroll { overflow-x: auto; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0;
+    display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+  .steps li {
+    counter-increment: s; background: var(--card); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 12px 8px 38px; position: relative;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px;
+  }
+  .steps li::before {
+    content: counter(s); position: absolute; left: 12px; top: 8px;
+    color: var(--muted); font-weight: 700;
+  }
+  .steps li small { display: block; font-family: inherit; color: var(--muted); font-size: 11px; }
+  .callout {
+    border-left: 3px solid var(--accent); background: var(--card);
+    padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Recipes API — схема базы данных</h1>
+  <p class="sub">
+    Спецификация для реализации на MySQL 8 + Sequelize. Типы, обязательность, значения по умолчанию,
+    внешние ключи и индексы выгружены из работающей базы — переносить в миграции можно один в один.
+  </p>
+
+  <div class="legend">
+    <span class="tag t-pk">PK</span><span class="sub" style="margin:0">первичный ключ</span>
+    <span class="tag t-fk">FK</span><span class="sub" style="margin:0">внешний ключ</span>
+    <span class="tag t-uk">UK</span><span class="sub" style="margin:0">уникальный</span>
+    <span class="tag t-idx">IDX</span><span class="sub" style="margin:0">индекс</span>
+    <span class="tag t-nn">NOT NULL</span>
+    <span class="tag t-null">NULL</span><span class="sub" style="margin:0">допускает пустое значение</span>
+  </div>
+
+  <h2>Связи</h2>
+  <div id="erd"><p class="fallback">Диаграмма загружается… (для отрисовки нужен интернет — ниже всё то же самое таблицами)</p></div>
+
+  <div class="callout">
+    <b>Как читать:</b> <code>||</code> — ровно один, <code>o{</code> — ноль или много, <code>|o</code> — ноль или один.
+    Например <code>CUISINES |o--o{ RECIPES</code>: у рецепта кухня может отсутствовать (<code>cuisine_id</code> nullable),
+    а у кухни может быть сколько угодно рецептов.
+  </div>
+
+  <h2>Таблицы</h2>
+  <div class="grid">
+
+    <section class="card">
+      <header><h3>users</h3><span class="role">пользователи: авторы рецептов и отзывов</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">username</td><td class="type">VARCHAR(50)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">3–50 символов (валидация модели)</td></tr>
+          <tr><td class="col">email</td><td class="type">VARCHAR(255)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">isEmail</td></tr>
+          <tr><td class="col">password_hash</td><td class="type">VARCHAR(255)</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">bcrypt, 60 симв. + запас</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+      <footer>Колонки <b>password</b> в БД нет: в модели это виртуальное поле, хук превращает его в <b>password_hash</b>.</footer>
+    </section>
+
+    <section class="card">
+      <header><h3>recipes</h3><span class="role">основная сущность</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">user_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-fk">FK</span><span class="tag t-idx">IDX</span></div></td><td class="note">→ users.id · CASCADE</td></tr>
+          <tr><td class="col">cuisine_id</td><td class="type">INT UNSIGNED</td><td><span class="tag t-null">NULL</span></td><td><div class="keys"><span class="tag t-fk">FK</span><span class="tag t-idx">IDX</span></div></td><td class="note">→ cuisines.id · SET NULL</td></tr>
+          <tr><td class="col">name</td><td class="type">VARCHAR(200)</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">slug</td><td class="type">VARCHAR(220)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">из name, конфликт → -2, -3</td></tr>
+          <tr><td class="col">image_url</td><td class="type">VARCHAR(500)</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">prep_time_min</td><td class="type">SMALLINT UNSIGNED</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">минуты</td></tr>
+          <tr><td class="col">cook_time_min</td><td class="type">SMALLINT UNSIGNED</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">минуты</td></tr>
+          <tr><td class="col">servings</td><td class="type">SMALLINT UNSIGNED</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">порций</td></tr>
+          <tr><td class="col">difficulty</td><td class="type">ENUM(easy, medium, hard)</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">default <b>easy</b></td></tr>
+          <tr><td class="col">calories_per_serving</td><td class="type">SMALLINT UNSIGNED</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">ккал на порцию</td></tr>
+          <tr><td class="col">rating_avg</td><td class="type">DECIMAL(3,2)</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">default 0.00 · денормализация</td></tr>
+          <tr><td class="col">review_count</td><td class="type">INT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">default 0 · денормализация</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">deleted_at</td><td class="type">DATETIME</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">soft-delete, paranoid: true</td></tr>
+        </tbody>
+      </table>
+      <footer><b>rating_avg</b> и <b>review_count</b> вручную не заполняются — пересчитываются в транзакции при изменении отзывов.</footer>
+    </section>
+
+    <section class="card">
+      <header><h3>recipe_ingredients</h3><span class="role">состав рецепта (связь с полями)</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">recipe_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-fk">FK</span><span class="tag t-idx">IDX</span></div></td><td class="note">→ recipes.id · CASCADE</td></tr>
+          <tr><td class="col">ingredient_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-null">NULL</span></td><td><div class="keys"><span class="tag t-fk">FK</span><span class="tag t-idx">IDX</span></div></td><td class="note">→ ingredients.id · SET NULL</td></tr>
+          <tr><td class="col">position</td><td class="type">SMALLINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">default 1 · порядок в списке</td></tr>
+          <tr><td class="col">raw_text</td><td class="type">VARCHAR(255)</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">«200 г спагетти»</td></tr>
+          <tr><td class="col">quantity</td><td class="type">DECIMAL(10,3)</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">«по вкусу» → NULL</td></tr>
+          <tr><td class="col">unit</td><td class="type">VARCHAR(50)</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">g, ml, pcs…</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+      <footer>Индекс <b>(recipe_id, position)</b> — неуникальный: продукт может встречаться в рецепте дважды (в тесто и в начинку).</footer>
+    </section>
+
+    <section class="card">
+      <header><h3>recipe_steps</h3><span class="role">шаги приготовления</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">recipe_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-fk">FK</span></div></td><td class="note">→ recipes.id · CASCADE</td></tr>
+          <tr><td class="col">position</td><td class="type">SMALLINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">default 1</td></tr>
+          <tr><td class="col">body</td><td class="type">TEXT</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">текст шага</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+      <footer><b>UNIQUE (recipe_id, position)</b> — двух шагов с одним номером в рецепте быть не может.</footer>
+    </section>
+
+    <section class="card">
+      <header><h3>reviews</h3><span class="role">отзывы с оценкой</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">recipe_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-fk">FK</span><span class="tag t-uk">UK</span></div></td><td class="note">→ recipes.id · CASCADE</td></tr>
+          <tr><td class="col">user_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-fk">FK</span><span class="tag t-uk">UK</span></div></td><td class="note">→ users.id · CASCADE</td></tr>
+          <tr><td class="col">rating</td><td class="type">TINYINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note">1…5 — валидация модели</td></tr>
+          <tr><td class="col">body</td><td class="type">TEXT</td><td><span class="tag t-null">NULL</span></td><td></td><td class="note">оценка без текста допустима</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+      <footer><b>UNIQUE (recipe_id, user_id)</b> — один отзыв на рецепт от пользователя, повтор → HTTP 409.</footer>
+    </section>
+
+    <section class="card">
+      <header><h3>cuisines</h3><span class="role">справочник кухонь</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">INT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">name</td><td class="type">VARCHAR(100)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">Italian, Georgian…</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <header><h3>ingredients</h3><span class="role">нормализованные продукты</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">name</td><td class="type">VARCHAR(150)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">spaghetti, basil…</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <header><h3>tags</h3><span class="role">справочник тегов</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">INT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">name</td><td class="type">VARCHAR(100)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">Vegetarian, Quick…</td></tr>
+          <tr><td class="col">slug</td><td class="type">VARCHAR(120)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">генерируется из name</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <header><h3>meal_types</h3><span class="role">типы приёма пищи</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">id</td><td class="type">INT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span></div></td><td class="note">AUTO_INCREMENT</td></tr>
+          <tr><td class="col">name</td><td class="type">VARCHAR(100)</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-uk">UK</span></div></td><td class="note">breakfast, lunch, dinner, dessert</td></tr>
+          <tr><td class="col">created_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+          <tr><td class="col">updated_at</td><td class="type">DATETIME</td><td><span class="tag t-nn">NN</span></td><td></td><td class="note"></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <header><h3>recipe_tags</h3><span class="role">связка рецепт ↔ тег</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">recipe_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span><span class="tag t-fk">FK</span></div></td><td class="note">→ recipes.id · CASCADE</td></tr>
+          <tr><td class="col">tag_id</td><td class="type">INT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span><span class="tag t-fk">FK</span><span class="tag t-idx">IDX</span></div></td><td class="note">→ tags.id · CASCADE</td></tr>
+        </tbody>
+      </table>
+      <footer>Составной PK <b>(recipe_id, tag_id)</b>. Без собственного <b>id</b> и без timestamps — в модели связи <b>timestamps: false</b>.</footer>
+    </section>
+
+    <section class="card">
+      <header><h3>recipe_meal_types</h3><span class="role">связка рецепт ↔ тип приёма пищи</span></header>
+      <table>
+        <thead><tr><th>Колонка</th><th>Тип</th><th>Null</th><th>Ключи</th><th>Примечание</th></tr></thead>
+        <tbody>
+          <tr><td class="col">recipe_id</td><td class="type">BIGINT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span><span class="tag t-fk">FK</span></div></td><td class="note">→ recipes.id · CASCADE</td></tr>
+          <tr><td class="col">meal_type_id</td><td class="type">INT UNSIGNED</td><td><span class="tag t-nn">NN</span></td><td><div class="keys"><span class="tag t-pk">PK</span><span class="tag t-fk">FK</span><span class="tag t-idx">IDX</span></div></td><td class="note">→ meal_types.id · CASCADE</td></tr>
+        </tbody>
+      </table>
+      <footer>Составной PK <b>(recipe_id, meal_type_id)</b>, без timestamps.</footer>
+    </section>
+
+  </div>
+
+  <h2>Внешние ключи</h2>
+  <div class="wide scroll">
+    <table>
+      <thead><tr><th>Колонка</th><th>Ссылается на</th><th>ON DELETE</th><th>ON UPDATE</th><th>Почему так</th></tr></thead>
+      <tbody>
+        <tr><td class="col">recipes.user_id</td><td class="type">users.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note">удалили пользователя — уходят его рецепты</td></tr>
+        <tr><td class="col">recipes.cuisine_id</td><td class="type">cuisines.id</td><td class="type"><b>SET NULL</b></td><td class="type">CASCADE</td><td class="note">рецепт переживает удаление кухни</td></tr>
+        <tr><td class="col">recipe_ingredients.recipe_id</td><td class="type">recipes.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note">состав без рецепта не нужен</td></tr>
+        <tr><td class="col">recipe_ingredients.ingredient_id</td><td class="type">ingredients.id</td><td class="type"><b>SET NULL</b></td><td class="type">CASCADE</td><td class="note">строка остаётся читаемой за счёт raw_text</td></tr>
+        <tr><td class="col">recipe_steps.recipe_id</td><td class="type">recipes.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note">шаги принадлежат рецепту</td></tr>
+        <tr><td class="col">reviews.recipe_id</td><td class="type">recipes.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note"></td></tr>
+        <tr><td class="col">reviews.user_id</td><td class="type">users.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note"></td></tr>
+        <tr><td class="col">recipe_tags.recipe_id</td><td class="type">recipes.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note"></td></tr>
+        <tr><td class="col">recipe_tags.tag_id</td><td class="type">tags.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note"></td></tr>
+        <tr><td class="col">recipe_meal_types.recipe_id</td><td class="type">recipes.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note"></td></tr>
+        <tr><td class="col">recipe_meal_types.meal_type_id</td><td class="type">meal_types.id</td><td class="type">CASCADE</td><td class="type">CASCADE</td><td class="note"></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout">
+    <b>CASCADE — правило базы</b>, оно срабатывает при физическом удалении строки. Мягкое удаление рецепта
+    (проставленный <code>deleted_at</code>) каскад не запускает: шаги, состав и отзывы остаются на месте.
+  </div>
+
+  <h2>Индексы</h2>
+  <div class="wide scroll">
+    <table>
+      <thead><tr><th>Таблица</th><th>Имя</th><th>Тип</th><th>Колонки</th><th>Зачем</th></tr></thead>
+      <tbody>
+        <tr><td class="col">users</td><td class="type">username / email</td><td><span class="tag t-uk">UNIQUE</span></td><td class="type">username · email</td><td class="note">уникальность учёток</td></tr>
+        <tr><td class="col">cuisines · ingredients · meal_types</td><td class="type">name</td><td><span class="tag t-uk">UNIQUE</span></td><td class="type">name</td><td class="note">справочник без дублей</td></tr>
+        <tr><td class="col">tags</td><td class="type">name · slug</td><td><span class="tag t-uk">UNIQUE</span></td><td class="type">name · slug</td><td class="note"></td></tr>
+        <tr><td class="col">recipes</td><td class="type">slug</td><td><span class="tag t-uk">UNIQUE</span></td><td class="type">slug</td><td class="note">адрес рецепта</td></tr>
+        <tr><td class="col">recipes</td><td class="type">recipes_user_id</td><td><span class="tag t-idx">INDEX</span></td><td class="type">user_id</td><td class="note">рецепты автора</td></tr>
+        <tr><td class="col">recipes</td><td class="type">recipes_cuisine_id</td><td><span class="tag t-idx">INDEX</span></td><td class="type">cuisine_id</td><td class="note">фильтр по кухне</td></tr>
+        <tr><td class="col">recipe_ingredients</td><td class="type">recipe_ingredients_recipe_id_position</td><td><span class="tag t-idx">INDEX</span></td><td class="type">recipe_id, position</td><td class="note">состав по порядку</td></tr>
+        <tr><td class="col">recipe_ingredients</td><td class="type">recipe_ingredients_ingredient_id</td><td><span class="tag t-idx">INDEX</span></td><td class="type">ingredient_id</td><td class="note">где используется продукт</td></tr>
+        <tr><td class="col">recipe_steps</td><td class="type">recipe_steps_recipe_id_position</td><td><span class="tag t-uk">UNIQUE</span></td><td class="type">recipe_id, position</td><td class="note">нумерация шагов без дублей</td></tr>
+        <tr><td class="col">reviews</td><td class="type">reviews_recipe_id_user_id</td><td><span class="tag t-uk">UNIQUE</span></td><td class="type">recipe_id, user_id</td><td class="note">один отзыв от человека</td></tr>
+        <tr><td class="col">recipe_tags</td><td class="type">PRIMARY</td><td><span class="tag t-pk">PK</span></td><td class="type">recipe_id, tag_id</td><td class="note">составной ключ</td></tr>
+        <tr><td class="col">recipe_meal_types</td><td class="type">PRIMARY</td><td><span class="tag t-pk">PK</span></td><td class="type">recipe_id, meal_type_id</td><td class="note">составной ключ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="sub" style="margin-top:12px">
+    MySQL сам создаёт индекс под каждый внешний ключ, поэтому отдельно прописывать индексы на
+    <code>reviews.user_id</code>, <code>recipe_tags.tag_id</code> и <code>recipe_meal_types.meal_type_id</code> не нужно.
+  </p>
+
+  <h2>Порядок создания таблиц</h2>
+  <p class="sub">Таблица не может сослаться на несуществующую. Миграции пишутся в этом порядке, откат — в обратном.</p>
+  <ol class="steps">
+    <li>users</li>
+    <li>cuisines</li>
+    <li>ingredients</li>
+    <li>tags</li>
+    <li>meal_types</li>
+    <li>recipes<small>users, cuisines</small></li>
+    <li>recipe_ingredients<small>recipes, ingredients</small></li>
+    <li>recipe_steps<small>recipes</small></li>
+    <li>recipe_tags<small>recipes, tags</small></li>
+    <li>recipe_meal_types<small>recipes, meal_types</small></li>
+    <li>reviews<small>recipes, users</small></li>
+  </ol>
+
+  <h2>Типы: MySQL → Sequelize</h2>
+  <div class="wide scroll">
+    <table>
+      <thead><tr><th>MySQL</th><th>Sequelize</th><th>MySQL</th><th>Sequelize</th></tr></thead>
+      <tbody>
+        <tr><td class="type">BIGINT UNSIGNED</td><td class="col">DataTypes.BIGINT.UNSIGNED</td><td class="type">VARCHAR(n)</td><td class="col">DataTypes.STRING(n)</td></tr>
+        <tr><td class="type">INT UNSIGNED</td><td class="col">DataTypes.INTEGER.UNSIGNED</td><td class="type">TEXT</td><td class="col">DataTypes.TEXT</td></tr>
+        <tr><td class="type">SMALLINT UNSIGNED</td><td class="col">DataTypes.SMALLINT.UNSIGNED</td><td class="type">DECIMAL(p,s)</td><td class="col">DataTypes.DECIMAL(p, s)</td></tr>
+        <tr><td class="type">TINYINT UNSIGNED</td><td class="col">DataTypes.TINYINT.UNSIGNED</td><td class="type">ENUM(...)</td><td class="col">DataTypes.ENUM('easy', …)</td></tr>
+        <tr><td class="type">DATETIME</td><td class="col">DataTypes.DATE</td><td class="type">—</td><td class="col">underscored: true → snake_case</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Проверки на уровне приложения</h2>
+  <p class="sub">То, что база не сторожит, но обязано быть в моделях и роутах.</p>
+  <div class="wide scroll">
+    <table>
+      <thead><tr><th>Правило</th><th>Где реализуется</th></tr></thead>
+      <tbody>
+        <tr><td>rating в диапазоне 1…5</td><td class="note">валидация min/max модели Review — в БД TINYINT UNSIGNED допускает 0…255</td></tr>
+        <tr><td>корректный email, username 3…50</td><td class="note">валидации модели User</td></tr>
+        <tr><td>пароль от 6 символов</td><td class="note">валидация виртуального поля password</td></tr>
+        <tr><td>slug уникален с учётом мягко удалённых</td><td class="note">поиск с paranoid: false перед вставкой</td></tr>
+        <tr><td>rating_avg и review_count согласованы с reviews</td><td class="note">пересчёт в той же транзакции</td></tr>
+        <tr><td>автор рецепта и отзыва</td><td class="note">берётся из JWT, поле userId из тела запроса игнорируется</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script type="module">
+  const src = `erDiagram
+  USERS ||--o{ RECIPES : "1:N автор"
+  USERS ||--o{ REVIEWS : "1:N автор"
+  CUISINES |o--o{ RECIPES : "0..1:N кухня"
+  RECIPES ||--o{ RECIPE_INGREDIENTS : "1:N состав"
+  INGREDIENTS |o--o{ RECIPE_INGREDIENTS : "0..1:N продукт"
+  RECIPES ||--o{ RECIPE_STEPS : "1:N шаги"
+  RECIPES ||--o{ REVIEWS : "1:N отзывы"
+  RECIPES ||--o{ RECIPE_TAGS : ""
+  TAGS ||--o{ RECIPE_TAGS : "N:M теги"
+  RECIPES ||--o{ RECIPE_MEAL_TYPES : ""
+  MEAL_TYPES ||--o{ RECIPE_MEAL_TYPES : "N:M типы"
+
+  USERS {
+    bigint id PK ""
+    varchar username UK "NOT NULL"
+    varchar email UK "NOT NULL"
+    varchar password_hash "NOT NULL"
+  }
+  CUISINES {
+    int id PK ""
+    varchar name UK "NOT NULL"
+  }
+  INGREDIENTS {
+    bigint id PK ""
+    varchar name UK "NOT NULL"
+  }
+  TAGS {
+    int id PK ""
+    varchar name UK "NOT NULL"
+    varchar slug UK "NOT NULL"
+  }
+  MEAL_TYPES {
+    int id PK ""
+    varchar name UK "NOT NULL"
+  }
+  RECIPES {
+    bigint id PK ""
+    bigint user_id FK "NOT NULL - CASCADE"
+    int cuisine_id FK "NULL - SET NULL"
+    varchar slug UK "NOT NULL"
+    varchar name "NOT NULL"
+    enum difficulty "NOT NULL - easy"
+    decimal rating_avg "NOT NULL - 0.00"
+    int review_count "NOT NULL - 0"
+    datetime deleted_at "NULL - soft delete"
+    varchar остальные "см. карточку ниже"
+  }
+  RECIPE_INGREDIENTS {
+    bigint id PK ""
+    bigint recipe_id FK "NOT NULL - CASCADE"
+    bigint ingredient_id FK "NULL - SET NULL"
+    smallint position "NOT NULL - 1"
+    varchar raw_text "NOT NULL"
+    decimal quantity "NULL"
+    varchar unit "NULL"
+  }
+  RECIPE_STEPS {
+    bigint id PK ""
+    bigint recipe_id FK "NOT NULL - CASCADE"
+    smallint position UK "NOT NULL - уник. с recipe_id"
+    text body "NOT NULL"
+  }
+  REVIEWS {
+    bigint id PK ""
+    bigint recipe_id FK "NOT NULL - уник. с user_id"
+    bigint user_id FK "NOT NULL - CASCADE"
+    tinyint rating "NOT NULL - 1..5"
+    text body "NULL"
+  }
+  RECIPE_TAGS {
+    bigint recipe_id PK "FK - CASCADE"
+    int tag_id PK "FK - CASCADE"
+  }
+  RECIPE_MEAL_TYPES {
+    bigint recipe_id PK "FK - CASCADE"
+    int meal_type_id PK "FK - CASCADE"
+  }`;
+  const box = document.getElementById('erd');
+  try {
+    const mermaid = (await import('https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs')).default;
+    const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      themeVariables: {
+        darkMode: dark,
+        fontSize: '13px',
+        lineColor: dark ? '#9c998e' : '#73726c',
+        textColor: dark ? '#e6e3da' : '#26251f',
+        mainBkg: dark ? '#21211e' : '#ffffff',
+      },
+    });
+    const { svg } = await mermaid.render('erd-svg', src);
+    box.innerHTML = svg;
+  } catch (e) {
+    box.innerHTML =
+      '<p class="fallback">Диаграмму не удалось отрисовать (нет доступа к сети). ' +
+      'Все связи и колонки описаны ниже таблицами.</p>';
+  }
+</script>
+</body>
+</html>
