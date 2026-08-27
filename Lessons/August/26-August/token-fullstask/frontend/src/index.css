@@ -1,0 +1,104 @@
+:root {
+    --bg: #0f1115;
+    --card: #181b22;
+    --border: #262b36;
+    --text: #e7e9ee;
+    --muted: #9aa3b2;
+    --accent: #6b8afd;
+    --danger: #ff6b6b;
+    color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.app { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.topbar h1 { font-size: 20px; margin: 0; }
+.user { display: flex; align-items: center; gap: 12px; color: var(--muted); }
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.card h2, .card h3 { margin: 0 0 8px; font-size: 17px; }
+.subtitle { color: var(--muted); margin: 0 0 8px; }
+
+label { display: block; margin-bottom: 12px; color: var(--muted); font-size: 13px; }
+
+input, textarea {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 9px 11px;
+    background: #10131a;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font: inherit;
+    resize: vertical;
+}
+
+input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+button {
+    padding: 9px 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #0f1115;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:disabled { opacity: .6; cursor: default; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+
+.tab {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.tab.active { border-color: var(--accent); color: var(--text); }
+
+.link {
+    background: none;
+    padding: 0;
+    color: var(--danger);
+    font-weight: 400;
+}
+
+.error { color: var(--danger); margin: 0 0 12px; font-size: 13px; }
+.hint { color: var(--muted); font-size: 13px; }
+
+.posts { list-style: none; padding: 0; margin: 24px 0 0; }
+
+.posts footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 13px;
+}
