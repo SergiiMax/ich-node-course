@@ -7,41 +7,39 @@ fs.writeFile('info.txt', content, (err) => {
         console.error('Error occured writing file: ', err)
         return
     }
+    console.log('File was successfully written');
+
     fs.readFile('info.txt', 'utf-8', (err, data) => {
     if(err) {
         console.error('Error occured reading file: ', err)
         return
     }
-    console.log('File content: ', data);
+    console.log('File contents: ', data);
 })
 })
 
 // ИЛИ С ПОМОЩЬЮ ПОТОКОВ ===============================================================================================================
 
-const writeStream = fs.createWriteStream('info.txt', 'utf-8')
+// const writeStream = fs.createWriteStream('info.txt', 'utf-8')
 
 
-writeStream.write('Node.js is awesome!\n')
-writeStream.end()
+// writeStream.write('Node.js is awesome!\n')
+// writeStream.end()
 
-writeStream.on('error', (err) => {
-    if(err) {
-        console.error('Erroc occured writing file: ', err)
-        return
-    }
-})
+// writeStream.on('error', (err) => {
+//         console.error('Erroc occured writing file: ', err)
+// })
 
-writeStream.on('finish', () => {
-    console.log('Content was created!!!');
+// writeStream.on('finish', () => {
+//     console.log('Content was created!!!');
 
-    const readStream = fs.createReadStream('info.txt', 'utf-8')
+//     const readStream = fs.createReadStream('info.txt', 'utf-8')
 
-    readStream.on('data', (chunk) => {
-        console.log("File content: ", chunk);
-    })
+//     readStream.on('data', (chunk) => {
+//         console.log("File content: ", chunk);
+//     })
 
-    readStream.on('error', (err) => {
-        console.error('Erroc occured reading file: ', err)
-        return
-    })
-})
+//     readStream.on('error', (err) => {
+//         console.error('Erroc occured reading file: ', err)
+//     })
+// })

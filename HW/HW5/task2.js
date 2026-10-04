@@ -11,7 +11,7 @@ const server = http.createServer((req, res) => {
     } catch (err) {
         fs.appendFile('errors.log', `${new Date().toISOString()} - ${err.message}\n`, (error) => {
             if (error) {
-                console.error('Error during writing to log file: ', error)
+                return console.error('Error during writing to log file: ', error)
             }
         })
         res.statusCode = 500

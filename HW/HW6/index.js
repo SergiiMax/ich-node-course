@@ -1,22 +1,30 @@
-import express from 'express'
+import express, { urlencoded } from 'express'
 import 'dotenv/config'
 import connection from './db.js'
 
-const PORT = process.env.PORT
 const app = express()
-app.use(express.json())
 
-app.get('/', (req, res) => {
-    res.json({message: "Hello, World!"})
+app.use(express.json())
+app.use(urlencoded())
+
+const PORT = process.env.PORT || 3000
+
+app.get('/', (_req, res, next) => {
+    try {
+        res.json({ message: "Hello World!" })
+    } catch (error) {
+        next(error)
+    }
 })
 
 app.post('/', (req, res) => {
     const { name, age } = req.body
-    if (!name || !age) {
-        res.status(400).json({ error: "Invalid data" })
+    if (!name && !age) {
+        res.status(400)
+        res.json({ message: "Name and Age are required!" })
         return
     }
-    res.json({ message: "Recieved data", data: { name: name, age: age}})
+    res.json({ message:"Data recieved", data: { name:name, age: age } })
 })
 
 app.get('/products', (req, res) => {
@@ -56,13 +64,18 @@ app.post('/products', (req, res) => {
     })
 })
 
-app.use((err, req, res, next) => {
-    console.error(err.stack)
-    res.status(500).json({
-  message: "Internal Server Error",
-  error: err.message
-}
-)
+app.use((req, res) => {
+    res.status(404).json({ message: `Route ${req.method} ${req.originalUrl} not found` })
+})
+
+app.use((error, _req, res, _next) => {
+    const status = error.status || 500
+    
+    if (status === 500) {
+        console.error(error.status)
+    }
+
+    res.status(status). json({ message: status === 500 ? "Internal  Server Error" : error.message })
 })
 
 app.listen(PORT, () => {
