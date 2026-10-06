@@ -1,5 +1,5 @@
 import express, { urlencoded } from "express";
-import dotenv from "dotenv/config";
+import "dotenv/config";
 import pool, { checkConnection } from "./db.js";
 
 const app = express();
@@ -18,13 +18,17 @@ app.get("/", (_req, res, next) => {
 });
 
 app.post("/", (req, res) => {
-  const { name, age } = req.body;
+  try {
+    const { name, age } = req.body;
   if (!name && !age) {
     res.status(400);
     res.json({ message: "Name and Age are required!" });
     return;
   }
   res.json({ message: "Data recieved", data: { name: name, age: age } });
+  } catch (error) {
+    next(error)
+  }
 });
 
 app.get("/products", async (req, res, next) => {

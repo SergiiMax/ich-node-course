@@ -1,29 +1,32 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
-const App = sequelize.define(
-  "App",
+const Book = sequelize.define(
+  "Book",
   {
     id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
+    title: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    size: {
+    author: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    year: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
   },
   {
-    tableName: "apps",
-    timestamps: false,
+    tableName: "books",
+    timestamps: true,
   },
-); 
+);
 
-export default App;
+export default Book;

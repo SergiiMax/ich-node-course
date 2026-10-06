@@ -7,9 +7,9 @@ module.exports = {
      * Add altering commands here.
      *
      * Example:
-     * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
+     * 
      */
-    await queryInterface.createTable('apps', { 
+    await queryInterface.createTable('users', { 
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -17,14 +17,18 @@ module.exports = {
         allowNull: false
       },
       name: {
-            type: Sequelize.STRING,
-            allowNull: false,
-            unique: true,
+              type: Sequelize.STRING,
+              allowNull: false,
           },
-          size: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
+          email: {
+              type: Sequelize.STRING,
+              allowNull: false,
+              unique: true,
           },
+          createdAt: {
+              type: Sequelize.DATE,
+              defaultValue: Sequelize.fn('NOW'),
+          }
     });
   },
 
@@ -33,8 +37,8 @@ module.exports = {
      * Add reverting commands here.
      *
      * Example:
-     * await queryInterface.dropTable('users');
+     * 
      */
-    await queryInterface.dropTable('apps');
+    await queryInterface.dropTable('users');
   }
 };

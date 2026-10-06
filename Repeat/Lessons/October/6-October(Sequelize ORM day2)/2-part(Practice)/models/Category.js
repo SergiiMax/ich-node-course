@@ -1,29 +1,24 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/db.js";
 
-const App = sequelize.define(
-  "App",
+const Category = sequelize.define(
+  "Category",
   {
     id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-      primaryKey: true,
       autoIncrement: true,
+      primaryKey: true,
     },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-    size: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
   },
   {
-    tableName: "apps",
-    timestamps: false,
+    tableName: "categories",
+    timestamps: true,
   },
-); 
+);
 
-export default App;
+export default Category;
