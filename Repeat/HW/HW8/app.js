@@ -21,6 +21,22 @@ function parseId(value) {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
+function validateBook(body) {
+  const { title, author, year } = body ?? {};
+
+  if (typeof title !== "string" || !title.trim()) {
+    throw createError(400, 'Field "title" is required');
+  }
+  if (typeof author !== "string" || !author.trim()) {
+    throw createError(400, 'Field "author" is required');
+  }
+  if (!Number.isInteger(year)) {
+    throw createError(400, 'Field "year" must be an integer');
+  }
+
+  return { title: title.trim(), author: author.trim(), year };
+}
+
 app.get("/", (_req, res) => {
   res.send("Home Page!!!");
 });
@@ -39,9 +55,9 @@ app.get("/books", async (_req, res, next) => {
 
 app.post("/books", async (req, res, next) => {
   try {
-    const { title, author, year } = req.body;
+    const data = validateBook(req.body);
 
-    const newBook = await Book.create({ title, author, year });
+    const newBook = await Book.create(data);
     console.log("Book created: ", newBook.toJSON());
     res.status(201).json(newBook);
   } catch (error) {
@@ -56,28 +72,16 @@ app.put("/books/:id", async (req, res, next) => {
       throw createError(400, "Invalid book ID");
     }
 
-    const { title, author, year } = req.body;
-    if (typeof title !== "string" || !title.trim()) {
-      throw createError(400, 'Field "title" is required');
-    }
-    if (typeof author !== "string" || !author.trim()) {
-      throw createError(400, 'Field "author" is required');
-    }
-    if (!Number.isInteger(year)) {
-      throw createError(400, 'Field "year" must be an integer');
-    }
+    const data = validateBook(req.body);
 
     const book = await Book.findByPk(bookId);
     if (!book) {
       throw createError(404, "Book not found");
     }
 
-    await book.update({ title: title.trim(), author: author.trim(), year });
+    await book.update(data);
     res.json(book);
   } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      return next(createError(409, "Book with this title already exists"));
-    }
     next(error);
   }
 });
@@ -89,23 +93,33 @@ app.delete("/books/:id", async (req, res, next) => {
       throw createError(400, "Invalid book ID");
     }
 
-    const book = await Book.findByPk(bookId)
+    const book = await Book.findByPk(bookId);
     if (!book) {
       throw createError(404, "Book not found");
     }
-    await book.destroy()
+    await book.destroy();
     res.json({ message: "Book was successfully deleted" });
-
   } catch (error) {
-    next(error)
+    next(error);
   }
 });
 
 app.use((req, _res, next) => {
-    next(createError(404, `Route ${req.method} ${req.originalUrl} not found`));
+  next(createError(404, `Route ${req.method} ${req.originalUrl} not found`));
 });
 
 app.use((error, _req, res, _next) => {
+  if (error.name === "SequelizeUniqueConstraintError") {
+    return res
+      .status(409)
+      .json({ message: "Book with this title already exists" });
+  }
+  if (error.name === "SequelizeValidationError") {
+    return res
+      .status(400)
+      .json({ message: error.errors.map((e) => e.message).join(", ") });
+  }
+
   const status = error.status || 500;
 
   if (status === 500) {

@@ -17,10 +17,10 @@ app.get("/", (_req, res, next) => {
   }
 });
 
-app.post("/", (req, res) => {
+app.post("/", (req, res, next) => {
   try {
     const { name, age } = req.body;
-  if (!name && !age) {
+  if (!name || !age) {
     res.status(400);
     res.json({ message: "Name and Age are required!" });
     return;
@@ -43,9 +43,10 @@ app.get("/products", async (req, res, next) => {
 app.post("/products", async (req, res, next) => {
   try {
     const { name, price } = req.body;
+    const parsedPrice = Number(price);
 
-    if (!name || !price) {
-      return res.status(400).json({ message: "Name and price are required!" });
+     if (!name || price === undefined || price === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
+      return res.status(400).json({ message: "Name and price are required and must be correct!" });
     }
 
     const [result] = await pool.query(
@@ -72,7 +73,7 @@ app.use((error, _req, res, _next) => {
   const status = error.status || 500;
 
   if (status === 500) {
-    console.error(error.status);
+    console.error(`status: {${error.status}, message: ${error.message}`);
   }
 
   res.status(status).json({

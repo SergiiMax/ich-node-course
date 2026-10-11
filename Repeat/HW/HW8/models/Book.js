@@ -12,7 +12,6 @@ const Book = sequelize.define(
     title: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     author: {
       type: DataTypes.STRING,
@@ -26,6 +25,12 @@ const Book = sequelize.define(
   {
     tableName: "books",
     timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["title", "author"],
+      },
+    ],
   },
 );
 
