@@ -21,7 +21,7 @@ async function start() {
       console.log(`Server is running at http://localhost:${PORT}`);
     });
 
-    // Закрываем сервер и подключение к MongoDB
+    // Закрываем сервер и подключение к MongoDB (реагирует на Ctrl+C)
     process.on("SIGINT", () => {
       server.close(async () => {
         await closeDatabase();
