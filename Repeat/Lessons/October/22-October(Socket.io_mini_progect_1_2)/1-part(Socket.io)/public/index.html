@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Client socket.io Chat</title>
+  </head>
+
+  <body>
+    <header>
+      <h1>Socket.io chat</h1>
+      <span id="online"></span>
+    </header>
+
+    <ul id="messages"></ul>
+    <div id="typing"></div>
+
+    <form id="formChat">
+      <input
+        type="text"
+        id="messageInput"
+        maxlength="1000"
+        placeholder="Message..."
+      />
+      <button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const form = document.getElementById("formChat");
+      const messageInput = document.getElementById("messageInput");
+      const messages = document.getElementById("messages");
+      const onlineEl = document.getElementById("online");
+      const typingEl = document.getElementById("typing");
+
+      let name = localStorage.getItem("chatUsername");
+      if (!name) {
+        name = prompt("What is your name?").trim() || "Anonymus";
+        localStorage.setItem("chatUsername", name);
+      }
+
+      socket.on("connect", () => {
+        console.log("Connected to server, id:", socket.id);
+        socket.emit("join", name);
+      });
+
+      function formatTime(data) {
+        return new Date(data).toLocaleTimeString("de-DE", {
+          timeZone: "Europe/Berlin",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function scrollDown() {
+        // scrollHeight - полная высота содержимого списка, включая скрытую часть
+        // scrollTop - на сколько пикселей список прокручен сверху
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      // Создаёт елемент списка для одного сообщения и добавляет его на страницу
+      function renderMessage(msg) {
+        const li = document.createElement("li");
+        li.className = "msg" + (msg.author === name ? " my" : "");
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = `${msg.author} | ${formatTime(msg.createdAt)}`;
+
+        const text = document.createElement("p");
+        text.textContent = msg.text;
+
+        li.append(meta, text);
+        messages.appendChild(li);
+      }
+
+      // Показывает системное сообщение: "John left the chat", "John logged into the chat"
+      function renderSystem(text) {
+        const li = document.createElement("li");
+        li.className = "system";
+        li.textContent = text;
+        messages.appendChild(li);
+        scrollDown();
+      }
+
+      // История из БД
+      socket.on("history", (list) => {
+        messages.innerHTML = "";
+        list.forEach(renderMessage);
+        scrollDown();
+      });
+
+      // Новое сообщение
+      socket.on("message", (msg) => {
+        renderMessage(msg);
+        typingEl.textContent = "";
+        scrollDown();
+      });
+
+      // Системное сообщение
+      socket.on("system", renderSystem);
+
+      // Количество онлайн пользователей
+      socket.on("online", (count) => {
+        onlineEl.textContent = `Online: ${count}`;
+      });
+
+      let typingTimer;
+      socket.on("typing", (who) => {
+        typingEl.textContent = `${who} typing...`;
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => (typingEl.textContent = ""), 2000);
+      });
+
+      messageInput.addEventListener("input", () => socket.emit("typing"));
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const text = messageInput.value.trim();
+        if (!text) {
+          return;
+        }
+
+        const button = form.querySelector("button");
+        button.disabled = true;
+
+        socket.emit("message", text, (res) => {
+          button.disabled = false;
+
+          if (res.ok) {
+            messageInput.value = "";
+          } else {
+            alert(res.error);
+          }
+          messageInput.focus();
+        });
+      });
+    </script>
+  </body>
+</html>

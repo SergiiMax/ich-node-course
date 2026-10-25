@@ -38,7 +38,11 @@ async function start() {
       });
     });
   } catch (error) {
-    console.error("Failed to start server fue to MongoDB connection issue");
+    console.error(
+      "Failed to start server due to MongoDB connection issue:",
+      error.message,
+    );
+    process.exit(1);
   }
 }
 

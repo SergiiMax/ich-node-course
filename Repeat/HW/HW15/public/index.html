@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HW15</title>
+  </head>
+  <body>
+    <h3>Socket.io Chat</h3>
+    <input type="text" id="messageInput" />
+    <button id="btn" type="button">Send Message</button>
+    <ul id="messageList"></ul>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+
+      const btn = document.getElementById("btn");
+      const input = document.getElementById("messageInput");
+      const list = document.getElementById("messageList");
+
+      btn.addEventListener("click", () => {
+        const text = input.value.trim();
+
+        if (!text) return;
+
+        socket.emit("chat message", text);
+        input.value = "";
+      });
+
+      socket.on("message received", (data) => {
+        const li = document.createElement("li");
+        li.textContent = data;
+        list.appendChild(li);
+      });
+    </script>
+  </body>
+</html>

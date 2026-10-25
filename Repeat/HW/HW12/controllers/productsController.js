@@ -9,7 +9,7 @@ export async function createProduct(req, res, next) {
   try {
     const product = {
       ...req.body,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
     const result = await productsCollection().insertOne(product);
 
@@ -58,7 +58,7 @@ export async function updateProduct(req, res, next) {
     const update = {
       $set: {
         ...req.body,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       },
     };
     const product = await productsCollection().findOneAndUpdate(

@@ -15,11 +15,10 @@ const magazineSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Publisher",
     required: [true, "Magazine must have a Publisher"],
-    index: true,
   },
 }, { timestamps: true });
 
-magazineSchema.index({ publisher: 1, issueNumber: 1 }, { unique: true });
+magazineSchema.index({ publisher: 1, title: 1, issueNumber: 1 }, { unique: true });
 
 const Magazine = mongoose.model("Magazine", magazineSchema);
 

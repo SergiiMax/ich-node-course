@@ -47,7 +47,12 @@ export function validateCreateProduct(req, res, next) {
     });
   }
 
-  req.body = { name: name.trim(), price, description: description?.trim() };
+  const product = { name: name.trim(), price };
 
+  if (description !== undefined) {
+    product.description = description.trim();
+  }
+
+  req.body = product;
   next();
 }
