@@ -3,6 +3,7 @@ npm tsc --version
 
 npm init -y
 npm install --save-dev @types/node
+<!-- npm i -D @types/node -->
 npx tsc --init
 
 1.Установите TypeScript глобально с помощью команды: npm install -g typescript
