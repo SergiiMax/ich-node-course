@@ -1,6 +1,7 @@
 import express from "express";
 import "dotenv/config";
 import mongoose from "mongoose";
+import productRoutes from './routes/productRoutes.js'
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URL = process.env.MONGO_URL;
@@ -8,7 +9,7 @@ const MONGO_URL = process.env.MONGO_URL;
 const app = express();
 
 app.use(express.json());
-app.use('/cart', cartRoute)
+app.use('/products', productRoutes)
 
 app.get("/", (_req, res, _next) => {
   res.send("Welcome to the Home Page!!!");
